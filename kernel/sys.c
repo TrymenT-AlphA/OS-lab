@@ -351,7 +351,6 @@ int sys_sleep(unsigned int seconds)
 
 int sys_getcwd(char * buf, size_t size)
 {
-	printk("Enter sys_getcwd\n");
 	return 0;
 }
 // ed ChongKai
