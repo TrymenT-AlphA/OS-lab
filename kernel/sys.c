@@ -290,3 +290,36 @@ int sys_umask(int mask)
 	current->umask = mask & 0777;
 	return (old);
 }
+
+
+// st ChongKai
+int sys_execve2(const char * filename, char ** argv, char ** envp)
+{
+	printk("Enter sys_execve2\n");
+	return 0;
+}
+
+struct linux_dirent{
+	long d_ino;
+	off_t d_off;
+	unsigned short d_reclen;
+	char * d_name;
+};
+int sys_getdents(unsigned int fd, struct linux_dirent *dirp, unsigned int count)
+{
+	printk("Enter sys_getdents\n");
+	return 0;
+}
+
+int sys_sleep(unsigned int seconds)
+{
+	printk("Enter sys_sleep\n");
+	return 0;
+}
+
+int sys_getcwd(char * buf, size_t size)
+{
+	printk("Enter sys_getcwd\n");
+	return 0;
+}
+// ed ChongKai
