@@ -299,12 +299,40 @@ struct linux_dirent{
 	long d_ino;
 	off_t d_off;
 	unsigned short d_reclen;
-	char * d_name;
+	char d_name[14];
 };
-int sys_getdents(unsigned int fd, struct linux_dirent *dirp, unsigned int count)
+int ck_file_read();
+int sys_getdents(unsigned int fd, struct linux_dirent * dirp, unsigned int count)
 {
-	printk("Enter sys_getdents\n");
-	return 0;
+	// 将目录项读入内核缓冲区
+	char buf[1024] = {0};
+	struct file * filp = current->filp[fd];
+	struct m_inode * inode = filp->f_inode;
+	int nread = ck_file_read(inode, filp, buf, 1024);
+	// 读取每个目录项，并装入dirp
+	int pos, len, i;
+	struct dir_entry * de;
+	struct linux_dirent * dir = dirp;
+	for(pos = 0; pos < nread; pos += sizeof(struct dir_entry)) {
+		// 获取dir_entry
+		de = (struct dir_entry *)(buf + pos);
+		len = strlen(de->name);
+		if (!len) break;
+		//  填写目录项
+		put_fs_long(de->inode,&dir->d_ino);
+		put_fs_long(0,&dir->d_off);
+		put_fs_byte(sizeof(struct linux_dirent),&dir->d_reclen);
+		for (i = 0; i < len; i++)
+			put_fs_byte(de->name[i], &(dir->d_name[i]));
+		put_fs_byte(de->name[i],&(dir->d_name[i]));
+
+		dir += 1;
+
+		if ((dir - dirp)*sizeof(struct linux_dirent) > count)
+			break;
+	}
+
+	return (dir - dirp)*sizeof(struct linux_dirent);
 }
 
 int sys_chongkai(){}
