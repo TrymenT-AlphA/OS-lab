@@ -92,7 +92,7 @@ extern int sys_uselib();
 // st ChongKai
 extern int sys_execve2();
 extern int sys_getdents();
-int sys_chongkai(){};
+extern int sys_chongkai();
 extern int sys_sleep();
 extern int sys_getcwd();
 // ed ChongKai
