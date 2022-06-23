@@ -53,28 +53,28 @@ int ck_file_read(struct m_inode * inode, struct file * filp, char * buf, int cou
 
 	if ((left=count)<=0)
 		return 0;
-	while (left) {
-		if (nr = bmap(inode,(filp->f_pos)/BLOCK_SIZE)) {
-			if (!(bh=bread(inode->i_dev,nr)))
+	while (left) { // 0-6号直接块，7号一级间接块，8号二级间接块
+		if (nr = bmap(inode,(filp->f_pos)/BLOCK_SIZE)) { // bmap 进行块号映射
+			if (!(bh=bread(inode->i_dev,nr))) // 读取f_pos所处的块
 				break;
 		} else
 			bh = NULL;
-		nr = filp->f_pos % BLOCK_SIZE;
-		chars = MIN( BLOCK_SIZE-nr , left );
-		filp->f_pos += chars;
+		nr = filp->f_pos % BLOCK_SIZE; // 块内偏移
+		chars = MIN( BLOCK_SIZE-nr , left ); // 接下来要读取的字节数，取缓冲区剩余字节数和块剩余字节数的最小值
+		filp->f_pos += chars; // 更新f_pos，left
 		left -= chars;
-		if (bh) {
+		if (bh) { // 如果块存在，读取数据并写入缓冲区，此处直接写入内核缓冲区
 			char * p = nr + bh->b_data;
 			while (chars-->0)
 				*(buf++) = *(p++);
 			brelse(bh);
-		} else {
+		} else { // 如果对应块不存在，在缓冲区填充0
 			while (chars-->0)
 				*(buf++) = 0;
 		}
 	}
-	inode->i_atime = CURRENT_TIME;
-	return (count-left)?(count-left):-ERROR;
+	inode->i_atime = CURRENT_TIME; // 设置时间
+	return (count-left)?(count-left):-ERROR; // 返回读取的字节数
 }
 // ed ChongKai
 
