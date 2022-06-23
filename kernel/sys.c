@@ -293,11 +293,7 @@ int sys_umask(int mask)
 
 
 // st ChongKai
-int sys_execve2(const char * filename, char ** argv, char ** envp)
-{
-	printk("Enter sys_execve2\n");
-	return 0;
-}
+extern int sys_execve2();
 
 struct linux_dirent{
 	long d_ino;
