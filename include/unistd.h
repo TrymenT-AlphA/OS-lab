@@ -144,6 +144,13 @@
 #define __NR_lstat	84
 #define __NR_readlink	85
 #define __NR_uselib	86
+// st ChongKai
+#define __NR_execve2 87
+#define __NR_getdents 88
+#define __NR_chongkai 89 // 啥也不干
+#define __NR_sleep 90
+#define __NR_getcwd 91
+// ed ChongKai
 #define _syscall0(type,name) \
 type name(void) \
 { \
