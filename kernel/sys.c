@@ -311,36 +311,18 @@ int sys_getdents(unsigned int fd, struct linux_dirent *dirp, unsigned int count)
 	return 0;
 }
 
-/* ****************************
-struct sigaction {
-	void (*sa_handler)(int); 	// 信号处理函数
-	sigset_t sa_mask; 			// block信号
-	int sa_flags; 				// 设置信号处理的其他相关操作
-	void (*sa_restorer)(void); 	// 未使用
-};
-****************************** */
-void ck_handler(int signal){} // SIGALRM默认杀死进程，此处不做处理
+int sys_chongkai(){}
+
 int sys_sleep(unsigned int seconds)
 {
 	int ret;
-	struct sigaction action, oldaction;
-	// 配置action
-    action.sa_handler = ck_handler;
-    action.sa_mask = 0;
-    action.sa_flags = 0;
-	action.sa_restorer = NULL;
-	// 为SIGALRM信号设置action，保存旧action
-    sys_sigaction(SIGALRM,&action,&oldaction);
-	// 设置闹钟，seconds 后向当前进程发送SIGALRM信号
+	sys_signal(SIGALRM,1,NULL);
 	if ((ret = sys_alarm(seconds)) < 0)
 		return -1;
-    sys_pause(); // 直接进入调度
-	// 取消闹钟
+	sys_pause(); // 直接进入调度
 	if ((ret = sys_alarm(0)) < 0)
 		return -1;
-	// 还原action
-    sys_sigaction(SIGALRM,&oldaction,NULL);
-    return ret;
+	return ret;
 }
 
 int sys_getcwd(char * buf, size_t size)
