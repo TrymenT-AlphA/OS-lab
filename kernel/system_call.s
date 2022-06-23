@@ -64,7 +64,9 @@ nr_system_calls = 92
  * Ok, I get parallel printer interrupts while using the floppy for some
  * strange reason. Urgel. Now I just ignore them.
  */
-.globl system_call,sys_fork,timer_interrupt,sys_execve
+// st ChongKai
+.globl system_call,sys_fork,timer_interrupt,sys_execve,sys_execve2
+// ed ChongKai
 .globl hd_interrupt,floppy_interrupt,parallel_interrupt
 .globl device_not_available, coprocessor_error
 
@@ -203,6 +205,16 @@ sys_execve:
 	call do_execve
 	addl $4,%esp
 	ret
+
+// st ChongKai
+.align 4
+sys_execve2:
+	lea EIP(%esp),%eax
+	pushl %eax
+	call do_execve2
+	addl $4,%esp
+	ret
+// ed ChongKai
 
 .align 4
 sys_fork:
