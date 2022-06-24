@@ -104,7 +104,7 @@ static struct buffer_head * find_entry(struct m_inode ** dir,
 	if (namelen > NAME_LEN)
 		namelen = NAME_LEN;
 #endif
-	entries = (*dir)->i_size / (sizeof (struct dir_entry));
+	entries = (*dir)->i_size / (sizeof (struct dir_entry)); // 总de数
 	*res_dir = NULL;
 	if (!namelen)
 		return NULL;
@@ -130,7 +130,7 @@ static struct buffer_head * find_entry(struct m_inode ** dir,
 		return NULL;
 	i = 0;
 	de = (struct dir_entry *) bh->b_data;
-	while (i < entries) {
+	while (i < entries) { // 遍历所有目录项
 		if ((char *)de >= BLOCK_SIZE+bh->b_data) {
 			brelse(bh);
 			bh = NULL;
@@ -139,18 +139,19 @@ static struct buffer_head * find_entry(struct m_inode ** dir,
 				i += DIR_ENTRIES_PER_BLOCK;
 				continue;
 			}
-			de = (struct dir_entry *) bh->b_data;
+			de = (struct dir_entry *) bh->b_data; // 拿到de
 		}
-		if (match(namelen,name,de)) {
+		if (match(namelen,name,de)) { // 判断name
 			*res_dir = de;
 			return bh;
 		}
-		de++;
+		de++; // 继续
 		i++;
 	}
 	brelse(bh);
 	return NULL;
 }
+
 
 /*
  *	add_entry()
