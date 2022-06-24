@@ -398,7 +398,7 @@ void do_no_page(unsigned long error_code,unsigned long address)
 }
 
 // st ChongKai
-void ck_do_no_page(unsigned long address)
+void ck_do_no_page(unsigned long address) // 单纯减少error_code参数
 {
 	int nr[4];
 	unsigned long tmp;
