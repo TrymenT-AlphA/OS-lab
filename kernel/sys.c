@@ -360,35 +360,36 @@ int sys_sleep(unsigned int seconds)
 	return ret;
 }
 
-unsigned short get_de(struct m_inode * c_inode, unsigned short index,
-	struct dir_entry * res_de)
-{
-	int chars,nr,i;
-	struct buffer_head * bh;
-
-	if (nr = bmap(c_inode,0)) {
-		if (!(bh=bread(c_inode->i_dev,nr)))
-			return 0;
-	} else
-		bh = NULL;
-	nr = index * sizeof(struct dir_entry);
-	chars = sizeof(struct dir_entry);
-	if (bh) {
-		char * p = nr + bh->b_data;
-		while(chars-->0)
-			*((char*)(res_de)++) = *(p++);
-		brelse(bh);
-	} else {
-		while(chars-->0)
-			*((char*)(res_de)++) = 0;
-	}
-	c_inode->i_atime = CURRENT_TIME;
-	return 1;
-}
-
+extern get_de_by_index();
+extern get_de_by_ino();
 long sys_getcwd(char* buf,size_t size)
 {
-	printk("enter sys_getcwd\n");
-	return 0;
+	char _buf1[1024] = {0};
+	char _buf2[1024] = {0};
+	struct buffer_head * bh;
+	struct dir_entry * c_de, * f_de;
+	struct m_inode *c_inode = current->pwd;
+	int dev, nr, block;
+
+	int c_ino = c_inode->i_num;
+	if (c_inode == current->root)
+		strcpy(_buf2, "/");
+
+	while (c_inode != current->root) {
+		bh = get_de_by_index(&c_inode, 1, &f_de);
+		dev = c_inode->i_dev;
+		nr = f_de->inode;
+		c_inode = iget(dev, nr);
+		bh = get_de_by_ino(&c_inode, c_ino, &c_de);
+		c_ino = f_de->inode;
+		strcpy(_buf1, "/");
+		strcat(_buf1, c_de->name);
+		strcat(_buf1, _buf2);
+		strcpy(_buf2, _buf1);
+	}
+	char *p1 = _buf2, *p2 = buf;
+	while (size-->0)
+		put_fs_byte(*(p1++), p2++);
+	return buf;
 }
 // ed ChongKai
