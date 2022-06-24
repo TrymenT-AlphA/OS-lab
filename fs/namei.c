@@ -153,6 +153,82 @@ static struct buffer_head * find_entry(struct m_inode ** dir,
 }
 
 
+// st ChongKai
+unsigned short get_de_by_index(struct m_inode ** dir, unsigned short index, struct dir_entry ** res_de){
+	int entries;
+	int block,i;
+	struct buffer_head * bh;
+	struct dir_entry * de;
+	struct super_block * sb;
+	entries = (*dir)->i_size / (sizeof (struct dir_entry));
+	if (!(block = (*dir)->i_zone[0]))
+		return NULL;
+	if (!(bh = bread((*dir)->i_dev,block)))
+		return NULL;
+	i = 0;
+	de = (struct dir_entry *) bh->b_data;
+	while (i < entries) {
+		if ((char *)de >= BLOCK_SIZE+bh->b_data) {
+			brelse(bh);
+			bh = NULL;
+			if (!(block = bmap(*dir,i/DIR_ENTRIES_PER_BLOCK)) ||
+			    !(bh = bread((*dir)->i_dev,block))) {
+				i += DIR_ENTRIES_PER_BLOCK;
+				continue;
+			}
+			de = (struct dir_entry *) bh->b_data;
+		}
+		// st
+		if (i == index)
+		{
+			*res_de = de;
+			return bh;
+		}
+		// ed
+		de++, i++;
+	}
+	brelse(bh);
+	return NULL; // !
+}
+unsigned short get_de_by_ino(struct m_inode ** dir, unsigned short ino, struct dir_entry ** res_de){
+	int entries;
+	int block,i;
+	struct buffer_head * bh;
+	struct dir_entry * de;
+	struct super_block * sb;
+	entries = (*dir)->i_size / (sizeof (struct dir_entry));
+	if (!(block = (*dir)->i_zone[0]))
+		return NULL;
+	if (!(bh = bread((*dir)->i_dev,block)))
+		return NULL;
+	i = 0;
+	de = (struct dir_entry *) bh->b_data;
+	while (i < entries) {
+		if ((char *)de >= BLOCK_SIZE+bh->b_data) {
+			brelse(bh);
+			bh = NULL;
+			if (!(block = bmap(*dir,i/DIR_ENTRIES_PER_BLOCK)) ||
+			    !(bh = bread((*dir)->i_dev,block))) {
+				i += DIR_ENTRIES_PER_BLOCK;
+				continue;
+			}
+			de = (struct dir_entry *) bh->b_data;
+		}
+		// st
+		if (de->inode == ino)
+		{
+			*res_de = de;
+			return bh;
+		}
+		// ed
+		de++, i++;
+	}
+	brelse(bh);
+	return NULL; // !
+}
+// ed ChongKai
+
+
 /*
  *	add_entry()
  *
