@@ -301,38 +301,49 @@ struct linux_dirent{
 	unsigned short d_reclen;
 	char d_name[14];
 };
-int ck_file_read();
 int sys_getdents(unsigned int fd, struct linux_dirent * dirp, unsigned int count)
 {
-	// 将目录项读入内核缓冲区
-	char buf[1024] = {0};
-	struct file * filp = current->filp[fd];
-	struct m_inode * inode = filp->f_inode;
-	int nread = ck_file_read(inode, filp, buf, 1024);
-	// 读取每个目录项，并装入dirp
-	int pos, len, i;
+	int entries;
+	int block,i;
+	struct buffer_head * bh;
 	struct dir_entry * de;
-	struct linux_dirent * dir = dirp;
-	for(pos = 0; pos < nread; pos += sizeof(struct dir_entry)) {
-		// 获取dir_entry
-		de = (struct dir_entry *)(buf + pos);
-		len = strlen(de->name);
-		if (!len) break;
-		//  填写目录项
-		put_fs_long(de->inode,&dir->d_ino);
-		put_fs_long(0,&dir->d_off);
-		put_fs_byte(sizeof(struct linux_dirent),&dir->d_reclen);
-		for (i = 0; i < len; i++)
-			put_fs_byte(de->name[i], &(dir->d_name[i]));
-		put_fs_byte(de->name[i],&(dir->d_name[i]));
+	struct super_block * sb;
+	struct m_inode ** dir = &current->filp[fd]->f_inode;
+	struct linux_dirent * buf = dirp;
+	entries = (*dir)->i_size / (sizeof (struct dir_entry));
 
-		dir += 1;
-
-		if ((dir - dirp)*sizeof(struct linux_dirent) > count)
-			break;
+	if (!(block = (*dir)->i_zone[0]))
+		return NULL;
+	if (!(bh = bread((*dir)->i_dev,block)))
+		return NULL;
+	i = 0;
+	de = (struct dir_entry *) bh->b_data;
+	while (i < entries) {
+		if ((char *)de >= BLOCK_SIZE+bh->b_data) {
+			brelse(bh);
+			bh = NULL;
+			if (!(block = bmap(*dir,i/DIR_ENTRIES_PER_BLOCK)) ||
+			    !(bh = bread((*dir)->i_dev,block))) {
+				i += DIR_ENTRIES_PER_BLOCK;
+				continue;
+			}
+			de = (struct dir_entry *) bh->b_data;
+		}
+		// st
+		put_fs_long(de->inode,&buf->d_ino);
+		put_fs_long(0,&buf->d_off);
+		put_fs_byte(sizeof(struct linux_dirent), &buf->d_reclen);
+		int j;
+		for (j = 0; j < strlen(de->name); ++j)
+			put_fs_byte(de->name[j], &buf->d_name[j]);
+		put_fs_byte(0, &buf->d_name[j]);
+		buf++;
+		// ed
+		de++; 
+		i++;
 	}
-
-	return (dir - dirp)*sizeof(struct linux_dirent);
+	brelse(bh);
+	return (buf - dirp) * sizeof(struct linux_dirent); // !
 }
 
 int sys_chongkai(){}
@@ -349,8 +360,35 @@ int sys_sleep(unsigned int seconds)
 	return ret;
 }
 
-int sys_getcwd(char * buf, size_t size)
+unsigned short get_de(struct m_inode * c_inode, unsigned short index,
+	struct dir_entry * res_de)
 {
+	int chars,nr,i;
+	struct buffer_head * bh;
+
+	if (nr = bmap(c_inode,0)) {
+		if (!(bh=bread(c_inode->i_dev,nr)))
+			return 0;
+	} else
+		bh = NULL;
+	nr = index * sizeof(struct dir_entry);
+	chars = sizeof(struct dir_entry);
+	if (bh) {
+		char * p = nr + bh->b_data;
+		while(chars-->0)
+			*((char*)(res_de)++) = *(p++);
+		brelse(bh);
+	} else {
+		while(chars-->0)
+			*((char*)(res_de)++) = 0;
+	}
+	c_inode->i_atime = CURRENT_TIME;
+	return 1;
+}
+
+long sys_getcwd(char* buf,size_t size)
+{
+	printk("enter sys_getcwd\n");
 	return 0;
 }
 // ed ChongKai
