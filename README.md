@@ -25,7 +25,7 @@
 
 ## execve2
 
-**思路：**正常的execve系统调用，通过调用do_execve函数来设置对应可执行文件的代码段，数据段以及栈指针、参数和环境变量，但是并没有分配对应的页面，而是等到程序执行时自动产生缺页异常，调用do_no_page函数分配页面，因此，只需要改写do_execve2函数，在设置好所有的参数后，提前分配页面即可
+**思路：** 正常的execve系统调用，通过调用do_execve函数来设置对应可执行文件的代码段，数据段以及栈指针、参数和环境变量，但是并没有分配对应的页面，而是等到程序执行时自动产生缺页异常，调用do_no_page函数分配页面，因此，只需要改写do_execve2函数，在设置好所有的参数后，提前分配页面即可
 
 ```C
 ···
@@ -67,7 +67,7 @@ sys_execve2:
 
 ## getdents
 
-**思路：**首先分析一下find_entry函数，这对于getdents和getcwd都有帮助，重要的地方已添加注释
+**思路：** 首先分析一下find_entry函数，这对于getdents和getcwd都有帮助，重要的地方已添加注释
 
 ```C
 static struct buffer_head * find_entry(struct m_inode ** dir,
@@ -136,7 +136,7 @@ static struct buffer_head * find_entry(struct m_inode ** dir,
 
 ## sleep
 
-**思路：**利用操作系统的信号机制，首先设置一个闹钟，等待seconds秒后向当前进程发送一个SIGALRM信号，之后直接进入进程调度，这时当前进程会被挂起，直到收到信号后重新运行。注意
+**思路：** 利用操作系统的信号机制，首先设置一个闹钟，等待seconds秒后向当前进程发送一个SIGALRM信号，之后直接进入进程调度，这时当前进程会被挂起，直到收到信号后重新运行。注意
 
 ```C
 int sys_sleep(unsigned int seconds)
@@ -154,7 +154,7 @@ int sys_sleep(unsigned int seconds)
 
 ## getcwd
 
-**思路：**可以参考find_entry函数，实现寻找父目录目录项，以及寻找指定i_num的目录项
+**思路：** 可以参考find_entry函数，实现寻找父目录目录项，以及寻找指定i_num的目录项
 
 ### 通过索引查找
 
